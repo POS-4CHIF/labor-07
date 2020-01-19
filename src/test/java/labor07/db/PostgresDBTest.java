@@ -1,21 +1,27 @@
 package labor07.db;
 
-import at.michaelkoenig.labor07.data.Dozent;
-import at.michaelkoenig.labor07.data.Kunde;
-import at.michaelkoenig.labor07.data.Kurs;
-import at.michaelkoenig.labor07.data.KursDBException;
+import at.michaelkoenig.labor07.data.*;
 import at.michaelkoenig.labor07.db.IKurseDAO;
 import at.michaelkoenig.labor07.db.KurseDAO;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
+
 import org.junit.After;
 import org.junit.AfterClass;
+
 import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- *
  * @author reio
  */
 public class PostgresDBTest {
@@ -36,7 +42,9 @@ public class PostgresDBTest {
     }
 
     @Before
-    public void setUp() throws KursDBException {
+    public void setUp() throws KursDBException, SQLException, IOException {
+        Statement st = dao.getCon().createStatement();
+        st.execute(new String(Files.readAllBytes(Paths.get("src/test/sql/create.sql"))));
     }
 
     @After
@@ -67,6 +75,7 @@ public class PostgresDBTest {
         boolean result = dao.insertKunde(k);
         assertTrue(result);
         assertTrue(k.getId() > 0);
+        dao.deleteKunde(k);
     }
 
     @Test(expected = java.lang.IllegalArgumentException.class)
@@ -112,8 +121,8 @@ public class PostgresDBTest {
     public void testGetKurstypen() throws KursDBException {
         System.out.println("getKurstypen");
 
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        List<Kurstyp> result = dao.getKurstypen();
+        assertEquals(3, result.size());
     }
 
     /**
@@ -122,8 +131,9 @@ public class PostgresDBTest {
     @Test
     public void testGetKurs() throws KursDBException {
         System.out.println("getKurs");
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+
+        List<Kurs> result = dao.getKurse();
+        assertEquals(6, result.size());
     }
 
     /**
@@ -132,8 +142,10 @@ public class PostgresDBTest {
     @Test
     public void testInsertKurstyp() throws KursDBException {
         System.out.println("insertKurstyp");
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+
+        Kurstyp k1 = new Kurstyp('M', "Mediendesign");
+        dao.insertKurstyp(k1);
+        assertTrue(k1.getId() > 0);
     }
 
     /**
@@ -142,8 +154,16 @@ public class PostgresDBTest {
     @Test
     public void testDeleteKurstyp() throws KursDBException {
         System.out.println("deleteKurstyp");
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+
+        List<Kurstyp> kt = dao.getKurstypen();
+        int anzahl = kt.size();
+
+        Kurstyp lastKt = kt.get(anzahl - 1);
+        // und löschen
+        boolean result = dao.deleteKurstyp(lastKt);
+        assertTrue(result);
+        kt = dao.getKurstypen();
+        assertEquals(anzahl - 1, kt.size());
     }
 
     /**
@@ -152,8 +172,18 @@ public class PostgresDBTest {
     @Test
     public void testSaveKurs() throws KursDBException {
         System.out.println("saveKurs");
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+
+        int count = dao.getKurse().size();
+        Dozent doz = new Dozent();
+        doz.setId(3);
+        Kurstyp kt = new Kurstyp();
+        kt.setId('P');
+
+        Kurs k = new Kurs(null, kt, doz, "Rust", Date.valueOf("2020-04-27"));
+        dao.insertKurs(k);
+
+        assertEquals(count + 1, dao.getKurse().size());
+        assertTrue(k.getId() > 0);
     }
 
     /**
@@ -177,8 +207,14 @@ public class PostgresDBTest {
     @Test
     public void testBucheKurs() throws KursDBException {
         System.out.println("bucheKurs");
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+
+        Kunde kunde = new Kunde();
+        kunde.setId(1);
+        Kurs kurs = new Kurs();
+        kurs.setId(1);
+
+        dao.bucheKurs(kunde, kurs);
+        assertTrue(dao.getKundenFromKurs(kurs).stream().anyMatch(k -> k.equals(kunde)));
     }
 
     /**
@@ -186,8 +222,20 @@ public class PostgresDBTest {
      */
     @Test
     public void testStorniereKurs() throws KursDBException {
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        System.out.println("storniereKurs");
+
+        Kurs kurs = new Kurs();
+        kurs.setId(1);
+
+        int count = dao.getKundenFromKurs(kurs).size();
+        dao.getKundenFromKurs(kurs).stream().forEach(k -> System.out.println("asdf"+k.getZuname()));
+
+        Kunde kunde = new Kunde();
+        kunde.setId(3);
+
+        dao.storniereKurs(kunde, kurs);
+
+        assertEquals(count-1, dao.getKundenFromKurs(kurs).size());
     }
 
 }

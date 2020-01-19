@@ -2,6 +2,7 @@ package at.michaelkoenig.labor07.data;
 
 import at.michaelkoenig.labor07.data.Dozent;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.Objects;
 
 /*
@@ -18,13 +19,13 @@ public class Kurs {
     private Integer id;
     private Dozent doz;
     private String bezeichnung;
-    private LocalDate beginndatum;
+    private Date beginndatum;
     private Kurstyp kurstyp;
 
     public Kurs() {
     }
 
-    public Kurs(Integer id, Dozent doz, String bezeichnung, LocalDate beginndatum, Kurstyp kurstyp) {
+    public Kurs(Integer id, Kurstyp kurstyp, Dozent doz, String bezeichnung, Date beginndatum) {
         this.id = id;
         this.doz = doz;
         this.bezeichnung = bezeichnung;
@@ -33,7 +34,7 @@ public class Kurs {
     }
 
     public int getId() {
-        return id;
+        return id != null ? id : -1;
     }
 
     public final void setId(Integer id) {
@@ -60,11 +61,11 @@ public class Kurs {
         this.bezeichnung = bezeichnung;
     }
 
-    public LocalDate getBeginndatum() {
+    public Date getBeginndatum() {
         return beginndatum;
     }
 
-    public void setBeginndatum(LocalDate beginndatum) {
+    public void setBeginndatum(Date beginndatum) {
         this.beginndatum = beginndatum;
     }
 

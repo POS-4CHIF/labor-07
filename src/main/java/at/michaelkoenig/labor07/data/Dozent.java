@@ -27,7 +27,7 @@ public class Dozent {
     }
 
     public int getId() {
-        return id;
+        return id != null ? id : -1;
     }
 
     public final void setId(Integer id) {

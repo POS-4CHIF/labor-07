@@ -5,6 +5,8 @@ import at.michaelkoenig.labor07.data.Kunde;
 import at.michaelkoenig.labor07.data.Kurs;
 import at.michaelkoenig.labor07.data.Kurstyp;
 import at.michaelkoenig.labor07.data.Dozent;
+
+import java.sql.Connection;
 import java.util.List;
 
 /*
@@ -146,5 +148,7 @@ public interface IKurseDAO {
      * @throws KursDBException bei einem DB Fehler
      */
     boolean storniereKurs(Kunde kunde, Kurs kurs) throws KursDBException;
+
+    Connection getCon();
 
 }
