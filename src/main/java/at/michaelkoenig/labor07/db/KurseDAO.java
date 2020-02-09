@@ -96,10 +96,7 @@ public class KurseDAO implements IKurseDAO {
             throw new IllegalArgumentException("Kunde may not be null");
         }
 
-        try (PreparedStatement pstPivot = con.prepareStatement("DELETE FROM kurs_kunde WHERE kunde_id = ?");
-             PreparedStatement pstKunde = con.prepareStatement("DELETE FROM kunde WHERE kunde_id = ?")) {
-            pstPivot.setInt(1, k.getId());
-            pstPivot.executeUpdate();
+        try (PreparedStatement pstKunde = con.prepareStatement("DELETE FROM kunde WHERE kunde_id = ?")) {
             pstKunde.setInt(1, k.getId());
             return pstKunde.executeUpdate() == 1;
         } catch (SQLException ex) {
@@ -201,19 +198,9 @@ public class KurseDAO implements IKurseDAO {
             throw new IllegalArgumentException("Kurstyp may not be null");
         }
 
-        try (PreparedStatement pivotPst = con.prepareStatement(
-                "DELETE FROM kurs_kunde WHERE kurs_id IN (SELECT kurs_id FROM kurs WHERE kurs_typ = ?);");
-             PreparedStatement kursPst = con.prepareStatement("DELETE FROM kurs WHERE kurs_typ = ?;");
-             PreparedStatement kurstypPst = con.prepareStatement("DELETE FROM kurstyp WHERE kurstyp_id = ?;")) {
-
-            pivotPst.setString(1, String.valueOf(kt.getId()));
-            kursPst.setString(1, String.valueOf(kt.getId()));
-            kurstypPst.setString(1, String.valueOf(kt.getId()));
-
-            pivotPst.executeUpdate();
-            kursPst.executeUpdate();
-
-            return kurstypPst.executeUpdate() == 1;
+        try (PreparedStatement pst = con.prepareStatement("DELETE FROM kurstyp WHERE kurstyp_id = ?;")) {
+            pst.setString(1, String.valueOf(kt.getId()));
+            return pst.executeUpdate() == 1;
         } catch (SQLException ex) {
             throw new KursDBException(ex.getMessage());
         }

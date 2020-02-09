@@ -8,6 +8,7 @@ import org.junit.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 
@@ -97,13 +98,28 @@ public class PostgresDBTest {
         // Liste aller Kunden holen
         List<Kunde> kunden = dao.getKunden();
         int anzahl = kunden.size();
-        // Letzen Kunden holen
-        Kunde k = kunden.get(anzahl - 1);
+        // Kunden holen, der in keinem Kurs eingeschrieben ist
+        Kunde k = kunden.get(1);
         // und löschen
         boolean result = dao.deleteKunde(k);
         assertTrue(result);
         kunden = dao.getKunden();
         assertEquals(anzahl - 1, kunden.size());
+    }
+
+    /**
+     * Test of deleteKunde method, of class PostgresDB.
+     */
+    @Test(expected = KursDBException.class)
+    public void testDeleteKundeForeignKeyFail() throws KursDBException {
+        System.out.println("deleteKunde");
+        // Liste aller Kunden holen
+        List<Kunde> kunden = dao.getKunden();
+        int anzahl = kunden.size();
+        // Kunden holen, der in einem Kurs ist
+        Kunde k = kunden.get(anzahl - 1);
+        // und löschen
+        dao.deleteKunde(k);
     }
 
     /**
@@ -156,16 +172,35 @@ public class PostgresDBTest {
     @Test
     public void testDeleteKurstyp() throws KursDBException {
         System.out.println("deleteKurstyp");
+        // Ungenutzten Kurs eintragen
+        dao.insertKurstyp(new Kurstyp('U', "Ungenutzt"));
 
         List<Kurstyp> kt = dao.getKurstypen();
         int anzahl = kt.size();
 
+        // Letzten (=ungenutzen) Kurs löschen
         Kurstyp lastKt = kt.get(anzahl - 1);
         // und löschen
         boolean result = dao.deleteKurstyp(lastKt);
         assertTrue(result);
         kt = dao.getKurstypen();
         assertEquals(anzahl - 1, kt.size());
+    }
+
+    /**
+     * Test of deleteKurstyp method, of class PostgresDB.
+     */
+    @Test(expected = KursDBException.class)
+    public void testDeleteKurstypForeignKeyFail() throws KursDBException {
+        System.out.println("deleteKurstyp");
+
+        List<Kurstyp> kt = dao.getKurstypen();
+        int anzahl = kt.size();
+
+        // Genutzten Kurs holen
+        Kurstyp lastKt = kt.get(0);
+        // und versuchen zu löschen
+        dao.deleteKurstyp(lastKt);
     }
 
     /**
