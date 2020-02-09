@@ -5,21 +5,11 @@
  */
 package at.michaelkoenig.labor07.db;
 
-import at.michaelkoenig.labor07.data.KursDBException;
-import at.michaelkoenig.labor07.data.Kurs;
-import at.michaelkoenig.labor07.data.Kurstyp;
-import at.michaelkoenig.labor07.data.Kunde;
-import at.michaelkoenig.labor07.data.Dozent;
+import at.michaelkoenig.labor07.data.*;
 
-import javax.xml.transform.Result;
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author 20160451
@@ -84,10 +74,12 @@ public class KurseDAO implements IKurseDAO {
             throw new IllegalArgumentException("Kunde already has an ID");
         }
 
-        try (PreparedStatement pst = con.prepareStatement("INSERT INTO Kunde(kunde_zuname, kunde_vorname) VALUES(?, ?) RETURNING kunde_id as id")) {
+        try (PreparedStatement pst = con.prepareStatement("INSERT INTO Kunde(kunde_zuname, kunde_vorname) VALUES(?, ?)", new String[]{"kunde_id"})) {
             pst.setString(1, k.getZuname());
             pst.setString(2, k.getVorname());
-            ResultSet rs = pst.executeQuery();
+            if (pst.executeUpdate() == 0) return false;
+
+            ResultSet rs = pst.getGeneratedKeys();
             if (rs.next()) {
                 k.setId(rs.getInt(1));
                 return true;
@@ -236,7 +228,7 @@ public class KurseDAO implements IKurseDAO {
             throw new IllegalArgumentException("Kurs already has an ID");
         }
 
-        try (PreparedStatement pst = con.prepareStatement("INSERT INTO kurs(kurs_typ, kurs_doz_id, kurs_bezeichnung, kurs_beginndatum) VALUES(?,?,?,?) RETURNING kurs_id as id")) {
+        try (PreparedStatement pst = con.prepareStatement("INSERT INTO kurs(kurs_typ, kurs_doz_id, kurs_bezeichnung, kurs_beginndatum) VALUES(?,?,?,?)", new String[]{"kurs_id"})) {
             if (kurs.getKurstyp() != null) {
                 pst.setString(1, String.valueOf(kurs.getKurstyp().getId()));
             }
@@ -245,8 +237,9 @@ public class KurseDAO implements IKurseDAO {
             }
             pst.setString(3, kurs.getBezeichnung());
             pst.setDate(4, new java.sql.Date(kurs.getBeginndatum().getTime()));
+            if (pst.executeUpdate() == 0) return false;
 
-            ResultSet rs = pst.executeQuery();
+            ResultSet rs = pst.getGeneratedKeys();
 
             if (rs.next()) {
                 kurs.setId(rs.getInt(1));

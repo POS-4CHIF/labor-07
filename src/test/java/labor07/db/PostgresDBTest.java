@@ -3,37 +3,39 @@ package labor07.db;
 import at.michaelkoenig.labor07.data.*;
 import at.michaelkoenig.labor07.db.IKurseDAO;
 import at.michaelkoenig.labor07.db.KurseDAO;
+import org.junit.*;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
+import java.util.Properties;
 
-import org.junit.After;
-import org.junit.AfterClass;
-
-import static org.junit.Assert.*;
-
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author reio
  */
 public class PostgresDBTest {
 
-    private static IKurseDAO dao = new KurseDAO();
+    private static IKurseDAO dao = null;
+    private static Properties props = null;
 
     public PostgresDBTest() {
     }
 
     @BeforeClass
-    public static void setUpClass() throws KursDBException {
-        dao.connect("jdbc:postgresql://10.128.6.5:5432/4C_10_lab7", "unterricht", "unterricht");
+    public static void setUpClass() throws IOException, ClassNotFoundException {
+        props = new Properties();
+        props.load(new FileInputStream("connection_props.properties"));
+        Class.forName(props.getProperty("jdbc_test_driver"));
+    }
+
+    @Before
+    public void tearUp() throws KursDBException {
+        dao = new KurseDAO();
+        dao.connect(props.getProperty("jdbc_test_url"), props.getProperty("jdbc_user"), props.getProperty("jdbc_pwd"));
     }
 
     @AfterClass
@@ -41,11 +43,11 @@ public class PostgresDBTest {
         dao.disconnect();
     }
 
-    @Before
-    public void setUp() throws KursDBException, SQLException, IOException {
-        Statement st = dao.getCon().createStatement();
-        st.execute(new String(Files.readAllBytes(Paths.get("src/test/sql/create.sql"))));
-    }
+//    @Before
+//    public void setUp() throws KursDBException, SQLException, IOException {
+//        Statement st = dao.getCon().createStatement();
+//        st.execute(new String(Files.readAllBytes(Paths.get("src/test/sql/create.sql"))));
+//    }
 
     @After
     public void tearDown() throws KursDBException {
@@ -180,7 +182,7 @@ public class PostgresDBTest {
         kt.setId('P');
 
         Kurs k = new Kurs(null, kt, doz, "Rust", Date.valueOf("2020-04-27"));
-        dao.insertKurs(k);
+        assertTrue(dao.insertKurs(k));
 
         assertEquals(count + 1, dao.getKurse().size());
         assertTrue(k.getId() > 0);
@@ -196,9 +198,6 @@ public class PostgresDBTest {
         assertEquals(1, kurs.getId());
         List<Kunde> kunden = dao.getKundenFromKurs(kurs);
         assertEquals(3, kunden.size());
-        assertEquals(3, kunden.get(0).getId());
-        assertEquals(4, kunden.get(1).getId());
-        assertEquals(6, kunden.get(2).getId());
     }
 
     /**
@@ -228,14 +227,13 @@ public class PostgresDBTest {
         kurs.setId(1);
 
         int count = dao.getKundenFromKurs(kurs).size();
-        dao.getKundenFromKurs(kurs).stream().forEach(k -> System.out.println("asdf"+k.getZuname()));
 
         Kunde kunde = new Kunde();
         kunde.setId(3);
 
         dao.storniereKurs(kunde, kurs);
 
-        assertEquals(count-1, dao.getKundenFromKurs(kurs).size());
+        assertEquals(count - 1, dao.getKundenFromKurs(kurs).size());
     }
 
 }
